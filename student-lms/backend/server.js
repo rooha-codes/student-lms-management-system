@@ -15,11 +15,20 @@ const app = express();
 const server = http.createServer(app);
 
 // =============================
+// ALLOWED ORIGINS
+// =============================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://rooha-codes.github.io",
+  "https://rooha-codes.github.io/student-lms-management-system/",
+];
+
+// =============================
 // SOCKET.IO
 // =============================
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // frontend Vite
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -42,7 +51,16 @@ io.on("connection", (socket) => {
 // =============================
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend URL
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman/mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS policy blocked this origin"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -86,6 +104,7 @@ app.use("/api/results", resultRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/settings", settingRoutes);
+
 // =============================
 // ROOT ROUTE
 // =============================
