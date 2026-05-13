@@ -20,20 +20,21 @@ const server = http.createServer(app);
 const allowedOrigins = [
   "http://localhost:5173",
   "https://rooha-codes.github.io",
-  "https://rooha-codes.github.io/student-lms-management-system/",
 ];
 
-// =============================
-// SOCKET.IO
-// =============================
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-  },
-});
-
+  })
+);
 // Global socket access
 app.set("io", io);
 
