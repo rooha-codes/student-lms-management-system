@@ -1,9 +1,9 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://a209feb9-4b07-4b4c-9ea6-2ab9095c7e43-00-s1xpw4sjxv0y.sisko.replit.dev/api",
+  baseURL:
+    "https://a209feb9-4b07-4b4c-9ea6-2ab9095c7e43-00-s1xpw4sjxv0y.sisko.replit.dev/api",
 });
-
 // ✅ Attach token on every request
 API.interceptors.request.use(
   (req) => {
