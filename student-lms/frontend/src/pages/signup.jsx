@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../api";
 
 function Signup() {
   const navigate = useNavigate();
@@ -9,34 +9,29 @@ function Signup() {
     name: "",
     email: "",
     password: "",
-    role: "admin", // ✅ Default admin for your LMS
+    role: "admin",
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Handle Input Change
   const handleChange = (e) => {
+    setError("");
+
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
-
-    // Clear old error on typing
-    if (error) setError("");
   };
 
-  // ✅ Handle Signup
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
       setError("All fields are required");
       return;
     }
 
-    // Password length check
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters");
       return;
@@ -44,8 +39,8 @@ function Signup() {
 
     try {
       setLoading(true);
+      setError("");
 
-      // ✅ Send clean payload
       const payload = {
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
@@ -53,23 +48,19 @@ function Signup() {
         role: form.role,
       };
 
-      const res = await axios.post(
-        "http://localhost:5001/api/auth/signup",
-        payload
-      );
+      const res = await API.post("/auth/signup", payload);
 
       console.log("SIGNUP RESPONSE:", res.data);
 
       alert("Signup Successful ✅");
-
-      // ✅ Auto redirect to login
-      navigate("/");
+      navigate("/login");
     } catch (error) {
-      console.log("SIGNUP ERROR:", error.response?.data);
+      console.log("SIGNUP ERROR:", error.response?.data || error.message);
 
       setError(
         error.response?.data?.message ||
           error.response?.data?.error ||
+          error.message ||
           "Signup failed"
       );
     } finally {
@@ -78,82 +69,81 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Create Account
-        </h2>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 px-4">
+      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-bold text-slate-800">
+            Create Account
+          </h2>
 
-        {/* ✅ Error Message */}
-        {error && (
-          <p className="text-red-500 text-sm mb-4 text-center font-medium">
-            {error}
+          <p className="mt-2 text-sm text-slate-500">
+            Signup to your Student LMS account
           </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          {/* Full Name */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             name="name"
             placeholder="Full Name"
             autoComplete="name"
-            className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             value={form.name}
             onChange={handleChange}
+            className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
 
-          {/* Email */}
           <input
             type="email"
             name="email"
-            placeholder="Email"
+            placeholder="Email Address"
             autoComplete="email"
-            className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             value={form.email}
             onChange={handleChange}
+            className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
 
-          {/* Password */}
           <input
             type="password"
             name="password"
             placeholder="Password"
             autoComplete="new-password"
-            className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             value={form.password}
             onChange={handleChange}
+            className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
 
-          {/* Role */}
           <select
             name="role"
             value={form.role}
             onChange={handleChange}
-            className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
           </select>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full text-white p-3 rounded-lg transition ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
+            className="w-full rounded-xl bg-blue-600 p-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
           >
             {loading ? "Creating Account..." : "Signup"}
           </button>
         </form>
 
-        <p className="text-sm text-center mt-4">
+        <p className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <Link to="/" className="text-blue-600 font-semibold">
+          <Link
+            to="/login"
+            className="font-semibold text-blue-600 hover:underline"
+          >
             Login
           </Link>
         </p>
