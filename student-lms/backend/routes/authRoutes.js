@@ -1,102 +1,112 @@
+// backend/routes/authRoutes.js
+// ✅ SIMPLE WORKING VERSION (same like your old setup + token added)
+// Replace FULL file
+
 const express = require("express");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "secretkey";
 
-router.get("/test", (req, res) => {
-  res.send("Auth route working ✅");
-});
-
+// ======================================
+// 🔹 SIGNUP
+// ======================================
 router.post("/signup", async (req, res) => {
   try {
-    let { name, email, password, role } = req.body;
+    const { name, email, password, role } = req.body;
 
-    name = name?.trim();
-    email = email?.trim().toLowerCase();
-    password = password?.trim();
-
+    // ✅ Required fields
     if (!name || !email || !password) {
       return res.status(400).json({
-        success: false,
         message: "Name, email and password are required",
       });
     }
 
-    const existingUser = await User.findOne({ where: { email } });
+    // ✅ Check existing user
+    const existingUser = await User.findOne({
+      where: { email },
+    });
 
     if (existingUser) {
       return res.status(400).json({
-        success: false,
         message: "User already exists",
       });
     }
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: role || "admin",
+    // ✅ Save EXACT password (No bcrypt)
+    // Because your old database was working this way
+    const newUser = await User.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password: password,
+      role: role || "student",
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Signup successful",
+      message: "Signup successful ✅",
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
       },
     });
-  } catch (error) {
-    console.log("SIGNUP ERROR:", error);
-    res.status(500).json({
+  } catch (err) {
+    console.log("SIGNUP ERROR:", err);
+
+    return res.status(500).json({
       success: false,
-      message: error.message || "Signup failed",
+      message: err.message,
     });
   }
 });
 
+// ======================================
+// 🔹 LOGIN
+// ======================================
 router.post("/login", async (req, res) => {
   try {
-    let { email, password } = req.body;
+    const { email, password } = req.body;
 
-    email = email?.trim().toLowerCase();
-    password = password?.trim();
-
+    // ✅ Required fields
     if (!email || !password) {
       return res.status(400).json({
-        success: false,
         message: "Email and password are required",
       });
     }
 
+    // ✅ Old style login (email + password direct)
     const user = await User.findOne({
-      where: { email, password },
+      where: {
+        email: email.trim().toLowerCase(),
+        password: password,
+      },
     });
 
     if (!user) {
       return res.status(401).json({
-        success: false,
         message: "Invalid email or password",
       });
     }
 
+    // ✅ JWT token
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email,
         role: user.role,
+        email: user.email,
       },
       JWT_SECRET,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "7d",
+      }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Login successful",
+      message: "Login successful ✅",
       token,
       user: {
         id: user.id,
@@ -105,13 +115,36 @@ router.post("/login", async (req, res) => {
         role: user.role,
       },
     });
-  } catch (error) {
-    console.log("LOGIN ERROR:", error);
-    res.status(500).json({
+  } catch (err) {
+    console.log("LOGIN ERROR:", err);
+
+    return res.status(500).json({
       success: false,
-      message: error.message || "Login failed",
+      message: err.message,
     });
   }
+});
+
+// ======================================
+// 🔹 GET USERS
+// ======================================
+router.get("/users", async (req, res) => {
+  try {
+    const users = await User.findAll();
+
+    return res.status(200).json(users);
+  } catch (err) {
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+// ======================================
+// 🔹 TEST ROUTE
+// ======================================
+router.get("/test", (req, res) => {
+  res.send("Auth route working ✅");
 });
 
 module.exports = router;
