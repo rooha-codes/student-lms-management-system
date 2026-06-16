@@ -1,7 +1,9 @@
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import LandingPage from "./pages/LandingPage";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Login from "./pages/login";
+import Signup from "./pages/signup";
+
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Teachers from "./pages/Teachers";
@@ -11,19 +13,21 @@ import Attendance from "./pages/Attendance";
 import Schedule from "./pages/Schedule";
 import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
-import ProtectedRoute from "./components/ProtectedRoute";
+
 import StudentProfile from "./pages/StudentProfile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
+
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected Routes */}
+        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -33,6 +37,7 @@ function App() {
           }
         />
 
+        {/* Students */}
         <Route
           path="/students"
           element={
@@ -51,6 +56,7 @@ function App() {
           }
         />
 
+        {/* Teachers */}
         <Route
           path="/teachers"
           element={
@@ -60,6 +66,7 @@ function App() {
           }
         />
 
+        {/* Courses */}
         <Route
           path="/courses"
           element={
@@ -69,6 +76,7 @@ function App() {
           }
         />
 
+        {/* Results */}
         <Route
           path="/results"
           element={
@@ -78,6 +86,7 @@ function App() {
           }
         />
 
+        {/* Attendance */}
         <Route
           path="/attendance"
           element={
@@ -87,6 +96,7 @@ function App() {
           }
         />
 
+        {/* Schedule */}
         <Route
           path="/schedule"
           element={
@@ -96,6 +106,7 @@ function App() {
           }
         />
 
+        {/* Messages */}
         <Route
           path="/messages"
           element={
@@ -105,6 +116,7 @@ function App() {
           }
         />
 
+        {/* Settings */}
         <Route
           path="/settings"
           element={
@@ -113,8 +125,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
