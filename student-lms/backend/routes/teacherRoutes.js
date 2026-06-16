@@ -5,7 +5,6 @@ const Teacher = require("../models/Teacher");
 const Notification = require("../models/Notification");
 
 const auth = require("../middleware/authMiddleware");
-const admin = require("../middleware/adminMiddleware");
 
 // ========================================
 // HELPER → SAFE SOCKET + NOTIFICATION
@@ -32,7 +31,6 @@ const createNotification = async (req, message, role = "admin") => {
 
 // ========================================
 // COUNT ALL TEACHERS
-// IMPORTANT: MUST BE BEFORE /:id
 // ========================================
 router.get("/count/all", auth, async (req, res) => {
   try {
@@ -149,7 +147,7 @@ router.get("/:id", auth, async (req, res) => {
 // ========================================
 // ADD TEACHER
 // ========================================
-router.post("/", auth, admin, async (req, res) => {
+router.post("/", auth, async (req, res) => {
   try {
     let {
       name,
@@ -162,19 +160,16 @@ router.post("/", auth, admin, async (req, res) => {
       status,
     } = req.body;
 
-    // CLEAN INPUT
     name = name?.trim();
     email = email?.trim().toLowerCase();
     subject = subject?.trim();
 
-    // VALIDATION
     if (!name || !email || !subject) {
       return res.status(400).json({
         message: "Name, email and subject are required",
       });
     }
 
-    // EXISTING CHECK
     const existingTeacher = await Teacher.findOne({
       where: { email },
     });
@@ -185,22 +180,18 @@ router.post("/", auth, admin, async (req, res) => {
       });
     }
 
-    // CREATE
     const teacher = await Teacher.create({
       name,
       email,
       subject,
       phone: phone?.trim() || "",
       qualification: qualification?.trim() || "",
-      experience: experience?.trim() || "",
+      experience: experience?.toString().trim() || "",
       image: image?.trim() || "",
       status: status || "Active",
     });
 
-    await createNotification(
-      req,
-      `New teacher added: ${teacher.name}`
-    );
+    await createNotification(req, `New teacher added: ${teacher.name}`);
 
     return res.status(201).json({
       message: "Teacher added successfully",
@@ -219,7 +210,7 @@ router.post("/", auth, admin, async (req, res) => {
 // ========================================
 // UPDATE TEACHER
 // ========================================
-router.put("/:id", auth, admin, async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
     const teacher = await Teacher.findByPk(req.params.id);
 
@@ -233,22 +224,21 @@ router.put("/:id", auth, admin, async (req, res) => {
       ...req.body,
     };
 
-    // EMAIL CLEAN
     if (updatedData.email) {
       updatedData.email = updatedData.email.trim().toLowerCase();
     }
 
-    // NAME CLEAN
     if (updatedData.name) {
       updatedData.name = updatedData.name.trim();
     }
 
+    if (updatedData.experience) {
+      updatedData.experience = updatedData.experience.toString().trim();
+    }
+
     await teacher.update(updatedData);
 
-    await createNotification(
-      req,
-      `Teacher updated: ${teacher.name}`
-    );
+    await createNotification(req, `Teacher updated: ${teacher.name}`);
 
     return res.status(200).json({
       message: "Teacher updated successfully",
@@ -267,7 +257,7 @@ router.put("/:id", auth, admin, async (req, res) => {
 // ========================================
 // DELETE TEACHER
 // ========================================
-router.delete("/:id", auth, admin, async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     const teacher = await Teacher.findByPk(req.params.id);
 
@@ -281,10 +271,7 @@ router.delete("/:id", auth, admin, async (req, res) => {
 
     await teacher.destroy();
 
-    await createNotification(
-      req,
-      `Teacher removed: ${teacherName}`
-    );
+    await createNotification(req, `Teacher removed: ${teacherName}`);
 
     return res.status(200).json({
       message: "Teacher deleted successfully",
