@@ -2,32 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const Teacher = require("../models/Teacher");
-const Notification = require("../models/Notification");
 
 const auth = require("../middleware/authMiddleware");
-
-// ========================================
-// HELPER → SAFE SOCKET + NOTIFICATION
-// ========================================
-const createNotification = async (req, message, role = "admin") => {
-  try {
-    if (!Notification) return;
-
-    const notification = await Notification.create({
-      message,
-      role,
-      isRead: false,
-    });
-
-    const io = req.app.get("io");
-
-    if (io) {
-      io.emit("newNotification", notification);
-    }
-  } catch (error) {
-    console.log("NOTIFICATION ERROR:", error.message);
-  }
-};
 
 // ========================================
 // COUNT ALL TEACHERS
@@ -184,14 +160,12 @@ router.post("/", auth, async (req, res) => {
       name,
       email,
       subject,
-      phone: phone?.trim() || "",
-      qualification: qualification?.trim() || "",
+      phone: phone?.toString().trim() || "",
+      qualification: qualification?.toString().trim() || "",
       experience: experience?.toString().trim() || "",
-      image: image?.trim() || "",
+      image: image?.toString().trim() || "",
       status: status || "Active",
     });
-
-    await createNotification(req, `New teacher added: ${teacher.name}`);
 
     return res.status(201).json({
       message: "Teacher added successfully",
@@ -232,13 +206,15 @@ router.put("/:id", auth, async (req, res) => {
       updatedData.name = updatedData.name.trim();
     }
 
+    if (updatedData.subject) {
+      updatedData.subject = updatedData.subject.trim();
+    }
+
     if (updatedData.experience) {
       updatedData.experience = updatedData.experience.toString().trim();
     }
 
     await teacher.update(updatedData);
-
-    await createNotification(req, `Teacher updated: ${teacher.name}`);
 
     return res.status(200).json({
       message: "Teacher updated successfully",
@@ -267,11 +243,7 @@ router.delete("/:id", auth, async (req, res) => {
       });
     }
 
-    const teacherName = teacher.name;
-
     await teacher.destroy();
-
-    await createNotification(req, `Teacher removed: ${teacherName}`);
 
     return res.status(200).json({
       message: "Teacher deleted successfully",
