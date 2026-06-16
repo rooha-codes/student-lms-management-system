@@ -1,8 +1,7 @@
-// backend/server.js
-
 const express = require("express");
 const cors = require("cors");
 const sequelize = require("./config/db");
+
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
@@ -18,57 +17,64 @@ const server = http.createServer(app);
 // =============================
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:5174",
   "https://rooha-codes.github.io",
 ];
 
-// =============================
-// CORS OPTIONS
-// =============================
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log("Blocked by CORS:", origin);
-      callback(new Error("CORS policy blocked this origin"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-};
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+// Global socket access
+app.set("io", io);
+
+// Socket connection
+io.on("connection", (socket) => {
+  console.log(🔥 User connected: ${socket.id});
+
+  socket.on("disconnect", () => {
+    console.log(❌ User disconnected: ${socket.id});
+  });
+});
 
 // =============================
 // MIDDLEWARE
 // =============================
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman/mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS policy blocked this origin"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // =============================
-// SOCKET.IO
-// =============================
-const io = new Server(server, {
-  cors: corsOptions,
-});
-
-app.set("io", io);
-
-io.on("connection", (socket) => {
-  console.log(`🔥 User connected: ${socket.id}`);
-
-  socket.on("disconnect", () => {
-    console.log(`❌ User disconnected: ${socket.id}`);
-  });
-});
-
-// =============================
 // STATIC FILES
 // =============================
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 
 // =============================
 // ROUTES IMPORT
@@ -137,7 +143,7 @@ app.get("/api/health", async (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route not found: ${req.originalUrl}`,
+    message: Route not found: ${req.originalUrl},
   });
 });
 
@@ -145,13 +151,15 @@ app.use((req, res) => {
 // GLOBAL ERROR HANDLER
 // =============================
 app.use((err, req, res, next) => {
-  console.error("🔥 Global Server Error:", err.message);
+  console.error("🔥 Global Server Error:", err);
 
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal Server Error",
     error:
-      process.env.NODE_ENV === "development" ? err.stack : undefined,
+      process.env.NODE_ENV === "development"
+        ? err.stack
+        : undefined,
   });
 });
 
@@ -172,14 +180,18 @@ sequelize
   .then(() => {
     console.log("✅ Database synced successfully");
 
-    server.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+    server.listen(PORT, () => {
+      console.log(
+        🚀 Server running on http://localhost:${PORT}
+      );
     });
   })
   .catch((err) => {
     console.error("❌ Database Connection Failed");
     console.error("Error:", err.message);
-    console.log("Check if MySQL database credentials are correct.");
+    console.log(
+      "Check if XAMPP / MySQL service is running on port 3306."
+    );
 
     process.exit(1);
   });
