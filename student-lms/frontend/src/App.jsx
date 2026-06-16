@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/login";
@@ -19,15 +19,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
-
-        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -37,7 +34,6 @@ function App() {
           }
         />
 
-        {/* Students */}
         <Route
           path="/students"
           element={
@@ -56,7 +52,6 @@ function App() {
           }
         />
 
-        {/* Teachers */}
         <Route
           path="/teachers"
           element={
@@ -66,7 +61,6 @@ function App() {
           }
         />
 
-        {/* Courses */}
         <Route
           path="/courses"
           element={
@@ -76,7 +70,6 @@ function App() {
           }
         />
 
-        {/* Results */}
         <Route
           path="/results"
           element={
@@ -86,7 +79,6 @@ function App() {
           }
         />
 
-        {/* Attendance */}
         <Route
           path="/attendance"
           element={
@@ -96,7 +88,6 @@ function App() {
           }
         />
 
-        {/* Schedule */}
         <Route
           path="/schedule"
           element={
@@ -106,7 +97,6 @@ function App() {
           }
         />
 
-        {/* Messages */}
         <Route
           path="/messages"
           element={
@@ -116,7 +106,6 @@ function App() {
           }
         />
 
-        {/* Settings */}
         <Route
           path="/settings"
           element={
@@ -125,9 +114,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
