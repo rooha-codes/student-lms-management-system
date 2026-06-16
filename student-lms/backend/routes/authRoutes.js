@@ -1,97 +1,107 @@
 // backend/routes/authRoutes.js
-// ✅ SIMPLE WORKING VERSION (same like your old setup + token added)
-// Replace FULL file
 
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 const JWT_SECRET = process.env.JWT_SECRET || "secretkey";
 
-// ======================================
-// 🔹 SIGNUP
-// ======================================
+// =============================
+// TEST ROUTE
+// =============================
+router.get("/test", (req, res) => {
+  res.status(200).send("Auth route working ✅");
+});
+
+// =============================
+// SIGNUP
+// =============================
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    let { name, email, password, role } = req.body;
 
-    // ✅ Required fields
+    name = name?.trim();
+    email = email?.trim().toLowerCase();
+    password = password?.trim();
+
     if (!name || !email || !password) {
       return res.status(400).json({
+        success: false,
         message: "Name, email and password are required",
       });
     }
 
-    // ✅ Check existing user
     const existingUser = await User.findOne({
       where: { email },
     });
 
     if (existingUser) {
       return res.status(400).json({
+        success: false,
         message: "User already exists",
       });
     }
 
-    // ✅ Save EXACT password (No bcrypt)
-    // Because your old database was working this way
-    const newUser = await User.create({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password: password,
-      role: role || "student",
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: role || "admin",
     });
 
     return res.status(201).json({
       success: true,
       message: "Signup successful ✅",
       user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
       },
     });
-  } catch (err) {
-    console.log("SIGNUP ERROR:", err);
+  } catch (error) {
+    console.log("SIGNUP ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Signup failed",
+      error: error.message,
     });
   }
 });
 
-// ======================================
-// 🔹 LOGIN
-// ======================================
+// =============================
+// LOGIN
+// =============================
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
-    // ✅ Required fields
+    email = email?.trim().toLowerCase();
+    password = password?.trim();
+
     if (!email || !password) {
       return res.status(400).json({
+        success: false,
         message: "Email and password are required",
       });
     }
 
-    // ✅ Old style login (email + password direct)
     const user = await User.findOne({
       where: {
-        email: email.trim().toLowerCase(),
-        password: password,
+        email,
+        password,
       },
     });
 
     if (!user) {
       return res.status(401).json({
+        success: false,
         message: "Invalid email or password",
       });
     }
 
-    // ✅ JWT token
     const token = jwt.sign(
       {
         id: user.id,
@@ -115,36 +125,41 @@ router.post("/login", async (req, res) => {
         role: user.role,
       },
     });
-  } catch (err) {
-    console.log("LOGIN ERROR:", err);
+  } catch (error) {
+    console.log("LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Login failed",
+      error: error.message,
     });
   }
 });
 
-// ======================================
-// 🔹 GET USERS
-// ======================================
+// =============================
+// GET USERS
+// =============================
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      attributes: {
+        exclude: ["password"],
+      },
+    });
 
-    return res.status(200).json(users);
-  } catch (err) {
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.log("GET USERS ERROR:", error);
+
     return res.status(500).json({
-      message: err.message,
+      success: false,
+      message: "Failed to fetch users",
+      error: error.message,
     });
   }
-});
-
-// ======================================
-// 🔹 TEST ROUTE
-// ======================================
-router.get("/test", (req, res) => {
-  res.send("Auth route working ✅");
 });
 
 module.exports = router;
